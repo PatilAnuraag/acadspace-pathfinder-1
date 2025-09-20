@@ -80,7 +80,7 @@ const TestPage = () => {
           const session = existingSessions[0];
           setSessionId(session.id);
           setCurrentQuestionIndex(session.current_question_index || 0);
-          setAnswers((session.answers as TestAnswer[]) || []);
+          setAnswers((session.answers as unknown as TestAnswer[]) || []);
           
           toast({
             title: "Welcome back! 👋",
@@ -436,121 +436,119 @@ const TestPage = () => {
 
       {/* Test Content - Only show if authenticated */}
       {user && (
-        <>
-          {/* Main Content */}
-      <div className="container mx-auto px-4 py-8 max-w-6xl">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Journey Tracker - Sidebar */}
-          <div className="lg:col-span-1">
-            <JourneyTracker 
-              currentStep={testType || 'vibematch'} 
-              className="sticky top-24"
-            />
-          </div>
+        <div className="container mx-auto px-4 py-8 max-w-6xl">
+          <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
+            {/* Journey Tracker - Sidebar */}
+            <div className="lg:col-span-1">
+              <JourneyTracker 
+                currentStep={testType || 'vibematch'} 
+                className="sticky top-24"
+              />
+            </div>
 
-          {/* Test Content */}
-          <div className="lg:col-span-3">
-            <Card className="gradient-card border-0 shadow-xl animate-fade-in">
-              <CardContent className="p-8 space-y-6">
-                {/* Question Header */}
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <Badge variant="secondary" className="text-base px-4 py-2">
-                      Question {currentQuestionIndex + 1} of {questions.length}
-                    </Badge>
-                    
-                    <div className="flex items-center gap-2">
-                      {saving && (
-                        <Badge variant="outline" className="text-xs flex items-center gap-1">
-                          <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                          Saving...
-                        </Badge>
-                      )}
+            {/* Test Content */}
+            <div className="lg:col-span-3">
+              <Card className="gradient-card border-0 shadow-xl animate-fade-in">
+                <CardContent className="p-8 space-y-6">
+                  {/* Question Header */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <Badge variant="secondary" className="text-base px-4 py-2">
+                        Question {currentQuestionIndex + 1} of {questions.length}
+                      </Badge>
                       
-                      {currentQuestion.required ? (
-                        <Badge variant="destructive" className="text-xs">
-                          {uiMicrocopy.tests.requiredLabel}
-                        </Badge>
-                      ) : (
-                        <Badge variant="outline" className="text-xs">
-                          {uiMicrocopy.tests.optionalLabel}
-                        </Badge>
-                      )}
+                      <div className="flex items-center gap-2">
+                        {saving && (
+                          <Badge variant="outline" className="text-xs flex items-center gap-1">
+                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                            Saving...
+                          </Badge>
+                        )}
+                        
+                        {currentQuestion.required ? (
+                          <Badge variant="destructive" className="text-xs">
+                            {uiMicrocopy.tests.requiredLabel}
+                          </Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-xs">
+                            {uiMicrocopy.tests.optionalLabel}
+                          </Badge>
+                        )}
+                      </div>
                     </div>
+
+                    <h1 className="text-2xl md:text-3xl font-semibold leading-relaxed">
+                      {currentQuestion.text}
+                    </h1>
                   </div>
 
-                  <h1 className="text-2xl md:text-3xl font-semibold leading-relaxed">
-                    {currentQuestion.text}
-                  </h1>
+                  {/* Question Input */}
+                  <div className="py-6">
+                    {renderQuestionInput()}
+                  </div>
+
+                  {/* Navigation Buttons */}
+                  <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+                    <Button
+                      variant="outline"
+                      onClick={handleBack}
+                      className="w-full sm:w-auto hover-scale"
+                    >
+                      <ArrowLeft className="w-4 h-4 mr-2" />
+                      {uiMicrocopy.tests.backBtn}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      onClick={handlePause}
+                      className="w-full sm:w-auto"
+                    >
+                      <Pause className="w-4 h-4 mr-2" />
+                      Pause & Save
+                    </Button>
+
+                    <div className="flex-1" />
+
+                    <Button
+                      variant={isLastQuestion ? "success" : "career"}
+                      onClick={handleNext}
+                      disabled={currentQuestion.required && !hasAnswer}
+                      className="w-full sm:w-auto min-w-[140px] hover-scale"
+                    >
+                      {isLastQuestion ? (
+                        <>
+                          <Save className="w-4 h-4 mr-2" />
+                          {testType === 'vibematch' ? 'Continue to Next Test' : 'Complete & Generate Report'}
+                        </>
+                      ) : (
+                        <>
+                          {uiMicrocopy.tests.nextBtn}
+                          <ArrowRight className="w-4 h-4 ml-2" />
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Progress Indicator */}
+              <div className="text-center mt-6 space-y-2">
+                <div className="text-sm text-muted-foreground">
+                  {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}% complete
                 </div>
-
-                {/* Question Input */}
-                <div className="py-6">
-                  {renderQuestionInput()}
+                <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                  <BookOpen className="w-4 h-4" />
+                  <span>
+                    {testType === 'vibematch' 
+                      ? 'Discovering your personality and interests...' 
+                      : 'Analyzing your academic background...'
+                    }
+                  </span>
                 </div>
-
-                {/* Navigation Buttons */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
-                  <Button
-                    variant="outline"
-                    onClick={handleBack}
-                    className="w-full sm:w-auto hover-scale"
-                  >
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    {uiMicrocopy.tests.backBtn}
-                  </Button>
-
-                  <Button
-                    variant="ghost"
-                    onClick={handlePause}
-                    className="w-full sm:w-auto"
-                  >
-                    <Pause className="w-4 h-4 mr-2" />
-                    Pause & Save
-                  </Button>
-
-                  <div className="flex-1" />
-
-                  <Button
-                    variant={isLastQuestion ? "success" : "career"}
-                    onClick={handleNext}
-                    disabled={currentQuestion.required && !hasAnswer}
-                    className="w-full sm:w-auto min-w-[140px] hover-scale"
-                  >
-                    {isLastQuestion ? (
-                      <>
-                        <Save className="w-4 h-4 mr-2" />
-                        {testType === 'vibematch' ? 'Continue to Next Test' : 'Complete & Generate Report'}
-                      </>
-                    ) : (
-                      <>
-                        {uiMicrocopy.tests.nextBtn}
-                        <ArrowRight className="w-4 h-4 ml-2" />
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Progress Indicator */}
-            <div className="text-center mt-6 space-y-2">
-              <div className="text-sm text-muted-foreground">
-                {Math.round(((currentQuestionIndex + 1) / questions.length) * 100)}% complete
-              </div>
-              <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                <BookOpen className="w-4 h-4" />
-                <span>
-                  {testType === 'vibematch' 
-                    ? 'Discovering your personality and interests...' 
-                    : 'Analyzing your academic background...'
-                  }
-                </span>
               </div>
             </div>
           </div>
         </div>
-        </>
       )}
     </div>
   );
