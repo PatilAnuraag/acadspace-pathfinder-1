@@ -1,8 +1,9 @@
 {
-  "appName": "LovableCareers",
+  "appName": "Naviksha AI",
+  "tagline": "Navigate Your Future with AI-Powered Career Guidance",
   "onboarding": {
-    "welcomeTitle": "Welcome to LovableCareers",
-    "welcomeSubtitle": "Quick tests. Smart matches. Actionable next steps.",
+    "welcomeTitle": "Welcome to Naviksha AI",
+    "welcomeSubtitle": "Navigate your future with AI-powered career guidance. Quick tests. Smart matches. Actionable next steps.",
     "getStartedBtn": "Get started"
   },
   "auth": {
