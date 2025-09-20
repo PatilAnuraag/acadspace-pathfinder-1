@@ -26,20 +26,18 @@ import {
   MapPin
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/components/AuthProvider';
 import sampleReport from '@/data/sample_report_Aisha.json';
 
 const ReportViewer = () => {
   const navigate = useNavigate();
-  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
 
-  // Use profile data if available, fallback to sample
+  // Use sample data for demo
   const reportData = {
-    studentName: profile?.full_name || sampleReport.studentName,
-    schoolName: profile?.school_name || 'Your School',
-    grade: profile?.grade || sampleReport.grade,
-    board: profile?.board || sampleReport.board,
+    studentName: sampleReport.studentName,
+    schoolName: 'Your School',
+    grade: sampleReport.grade,
+    board: sampleReport.board,
     vibe_scores: sampleReport.vibe_scores,
     top5_buckets: sampleReport.top5_buckets,
     summaryParagraph: sampleReport.summaryParagraph
