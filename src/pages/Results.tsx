@@ -34,18 +34,11 @@ const Results = () => {
   };
   
   const handleShare = () => {
-    // Share functionality
-    if (navigator.share) {
-      navigator.share({
-        title: 'My Career Assessment Results',
-        text: 'Check out my personalized career recommendations!',
-        url: window.location.origin + '/report'
-      });
-    } else {
-      // Fallback: copy link to clipboard
-      navigator.clipboard.writeText(window.location.origin + '/report');
-      // You could add a toast notification here
-    }
+    // WhatsApp share functionality
+    const message = `🎯 Just completed my Career Assessment with Naviksha AI!\n\n✅ Discovered my personality type and interests\n✅ Got personalized career recommendations\n✅ Found my perfect career match!\n\nCheck out your career path too: ${window.location.origin}`;
+    
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(message)}`;
+    window.open(whatsappUrl, '_blank');
   };
 
   return (
