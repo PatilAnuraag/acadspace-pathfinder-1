@@ -1,0 +1,51 @@
+{
+  "studentName": "Aisha",
+  "grade": 11,
+  "board": "CBSE",
+  "vibe_scores": {"R": 12, "I": 48, "A": 18, "S": 8, "E": 6, "C": 8},
+  "edu_stats": {"Mathematics":88,"Physics":82,"Chemistry":74,"Computer Science":60,"English":78},
+  "extracurriculars": ["Robotics / Coding","Debate / MUN"],
+  "parents": ["IT / Software"],
+  "top5_buckets": [
+    {
+      "bucketName": "Data AI & Analytics",
+      "bucketScore": 88,
+      "topCareers": [
+        {
+          "careerName": "Data Scientist",
+          "matchScore": 92,
+          "topReasons": [
+            "High Investigative (I) score (48%) — you like analyzing and researching.",
+            "Strong Math & Physics marks (88,82) — good quantitative base.",
+            "Robotics & Coding extracurriculars show practical data curiosity."
+          ],
+          "studyPath": ["Strongify math & programming in 11-12","Pursue B.Sc/B.Tech with data electives","Do Kaggle projects and internships"],
+          "first3Steps": ["Complete an introductory Python course (free)","Do a Kaggle beginner notebook predicting student scores","Build a small portfolio notebook and share on GitHub"],
+          "confidence": "High",
+          "whatWouldChangeRecommendation": "If Math drops below 60, engineering routes may be harder."
+        },
+        {
+          "careerName": "Machine Learning Engineer",
+          "matchScore": 86
+        },
+        {
+          "careerName": "NLP Engineer",
+          "matchScore": 82
+        },
+        {
+          "careerName": "Data Analyst",
+          "matchScore": 78
+        },
+        {
+          "careerName": "ML Ops Engineer",
+          "matchScore": 74
+        }
+      ]
+    },
+    {"bucketName":"Computer Science & Software Development","bucketScore":82,"topCareers":[{"careerName":"Fullstack Developer","matchScore":83},{"careerName":"Mobile App Developer","matchScore":79}]},
+    {"bucketName":"Cybersecurity Networks & Emerging Tech","bucketScore":70,"topCareers":[{"careerName":"Cybersecurity Analyst","matchScore":71}]},
+    {"bucketName":"Entrepreneurship & Product Management","bucketScore":65,"topCareers":[{"careerName":"Product Manager","matchScore":66}]},
+    {"bucketName":"Design Media & Creative Industries","bucketScore":60,"topCareers":[{"careerName":"UX/UI Designer","matchScore":62}]}
+  ],
+  "summaryParagraph": "Aisha — your profile shows a clear investigative bent combined with strong maths and coding exposure. Data and AI-related fields fit very well. We recommend short hands-on projects and a focus on math/programming to consolidate your top career picks."
+}

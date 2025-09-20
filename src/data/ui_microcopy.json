@@ -1,0 +1,52 @@
+{
+  "appName": "LovableCareers",
+  "onboarding": {
+    "welcomeTitle": "Welcome to LovableCareers",
+    "welcomeSubtitle": "Quick tests. Smart matches. Actionable next steps.",
+    "getStartedBtn": "Get started"
+  },
+  "auth": {
+    "loginEmailPlaceholder": "Enter your email",
+    "loginPasswordPlaceholder": "Enter password",
+    "loginBtn": "Log in",
+    "signupBtn": "Create account",
+    "invalidCreds": "Email or password looks incorrect. Try again.",
+    "signupSuccess": "Account created — check your email to verify."
+  },
+  "tests": {
+    "questionProgress": "Question {current}/{total}",
+    "nextBtn": "Next",
+    "backBtn": "Back",
+    "completeTestBtn": "Complete test",
+    "saveProgressToast": "Progress saved",
+    "resumeTestCTA": "Resume where you left off",
+    "optionalLabel": "Optional",
+    "requiredLabel": "Required"
+  },
+  "results": {
+    "resultsHeadline": "Your Personalized Career Report",
+    "top5Heading": "Top 5 career buckets for you",
+    "shareBtn": "Share Report",
+    "downloadPDF": "Export PDF",
+    "confidenceLabel": "Confidence"
+  },
+  "badges": {
+    "badgeCompleteTests": "Assessment Champion",
+    "confettiMsg": "Great job! You're one step closer to your future."
+  },
+  "admin": {
+    "adminTitle": "Master Dashboard",
+    "editQuestionnaireBtn": "Edit Questionnaire",
+    "editCareerBtn": "Edit Career Mappings",
+    "brandSettings": "Branding & Copy",
+    "previewReport": "Preview Report for user",
+    "seedDataBtn": "Seed sample data"
+  },
+  "errors": {
+    "networkError": "Connection problem. We'll retry automatically.",
+    "sheetQuotaError": "Google Sheets quota reached. Try again in a few minutes."
+  },
+  "placeholders": {
+    "subjectiveExample": "Write 2–3 lines. Example: 'I loved building a small robot in class because I enjoyed solving mechanical puzzles.'"
+  }
+}
