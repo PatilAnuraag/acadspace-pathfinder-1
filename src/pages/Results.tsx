@@ -193,11 +193,11 @@ const Results = () => {
             </div>
             
             <div className="flex gap-3 mt-6 pt-6 border-t">
-              <Button onClick={() => navigate('/')} variant="outline">
-                Take Another Test
+              <Button onClick={() => navigate('/report')} variant="outline">
+                View Full Report
               </Button>
-              <Button onClick={() => navigate('/profile')} className="group">
-                View Full Profile
+              <Button onClick={() => navigate('/')} className="group">
+                Share with Friends
                 <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
               </Button>
             </div>
