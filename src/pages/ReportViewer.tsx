@@ -3,7 +3,7 @@
  * Displays comprehensive career analysis and recommendations
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,24 +23,67 @@ import {
   Users,
   Briefcase,
   GraduationCap,
-  MapPin
+  MapPin,
+  Loader2
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import sampleReport from '@/data/sample_report_Aisha.json';
+import { useAuth } from '@/components/AuthProvider';
+import { supabase } from '@/integrations/supabase/client';
 
 const ReportViewer = () => {
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
+  const [reportData, setReportData] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // Use sample data for demo
-  const reportData = {
-    studentName: sampleReport.studentName,
-    schoolName: 'Your School',
-    grade: sampleReport.grade,
-    board: sampleReport.board,
-    vibe_scores: sampleReport.vibe_scores,
-    top5_buckets: sampleReport.top5_buckets,
-    summaryParagraph: sampleReport.summaryParagraph
+  // Check auth and fetch user data
+  useEffect(() => {
+    if (!authLoading && !user) {
+      navigate('/auth');
+      return;
+    }
+
+    if (user) {
+      fetchUserData();
+    }
+  }, [user, authLoading, navigate]);
+
+  const fetchUserData = async () => {
+    try {
+      setLoading(true);
+
+      // Fetch user profile
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Error fetching profile:', profileError);
+      } else {
+        setUserProfile(profile);
+      }
+
+      // Fetch career report
+      const { data: report, error: reportError } = await supabase
+        .from('career_reports')
+        .select('*')
+        .eq('user_id', user.id)
+        .maybeSingle();
+
+      if (reportError) {
+        console.error('Error fetching report:', reportError);
+      } else if (report) {
+        setReportData(report.report_data);
+      }
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const riasecLabels = {
@@ -62,6 +105,51 @@ const ReportViewer = () => {
     console.log('Sharing report...');
   };
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto" />
+          <p className="text-muted-foreground">Loading your report...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show message if no report available
+  if (!reportData) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-6 max-w-md">
+          <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+            <BookOpen className="w-8 h-8 text-primary" />
+          </div>
+          <div>
+            <h2 className="text-2xl font-semibold mb-2">No Report Available</h2>
+            <p className="text-muted-foreground">
+              Complete your assessments to generate your personalized career report.
+            </p>
+          </div>
+          <Button onClick={() => navigate('/')}>
+            Go to Dashboard
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  // Use dynamic data
+  const displayData = {
+    studentName: userProfile?.full_name || reportData?.studentName || user?.email?.split('@')[0] || 'Student',
+    schoolName: userProfile?.school_name || 'Your School',
+    grade: userProfile?.grade || reportData?.grade || 11,
+    board: userProfile?.board || reportData?.board || 'CBSE',
+    vibe_scores: reportData?.vibe_scores || {},
+    top5_buckets: reportData?.top5_buckets || [],
+    summaryParagraph: reportData?.summaryParagraph || 'Your personalized career analysis is being generated based on your assessment responses.'
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header - Cover Page Style */}
@@ -80,12 +168,12 @@ const ReportViewer = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <h2 className="text-2xl font-semibold">{reportData.studentName}</h2>
-              <p className="text-lg opacity-80">{reportData.schoolName}</p>
+              <h2 className="text-2xl font-semibold">{displayData.studentName}</h2>
+              <p className="text-lg opacity-80">{displayData.schoolName}</p>
               <div className="flex items-center justify-center gap-4 text-sm opacity-70">
-                <span>Grade {reportData.grade}</span>
+                <span>Grade {displayData.grade}</span>
                 <span>•</span>
-                <span>{reportData.board} Board</span>
+                <span>{displayData.board} Board</span>
               </div>
             </div>
             <div className="flex justify-center gap-4 pt-4">
@@ -185,7 +273,7 @@ const ReportViewer = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-foreground leading-relaxed text-lg">
-                  {reportData.summaryParagraph}
+                  {displayData.summaryParagraph}
                 </p>
               </CardContent>
             </Card>
@@ -247,20 +335,21 @@ const ReportViewer = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {Object.entries(reportData.vibe_scores || {}).map(([key, value]) => {
+                {Object.entries(displayData.vibe_scores || {}).map(([key, value]) => {
                   const info = riasecLabels[key as keyof typeof riasecLabels];
+                  const score = Number(value) || 0;
                   return (
                     <div key={key} className="space-y-3">
                       <div className="flex justify-between items-center">
                         <div>
                           <div className="flex items-center gap-2">
-                            <span className="font-semibold text-lg">{info.name}</span>
-                            <Badge variant="secondary" className="text-sm">{value}%</Badge>
+                            <span className="font-semibold text-lg">{info?.name || key}</span>
+                            <Badge variant="secondary" className="text-sm">{score}%</Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">{info.description}</p>
+                          <p className="text-sm text-muted-foreground">{info?.description || ''}</p>
                         </div>
                       </div>
-                      <Progress value={value} className="h-3" />
+                      <Progress value={score} className="h-3" />
                     </div>
                   );
                 })}
@@ -279,7 +368,7 @@ const ReportViewer = () => {
               </p>
             </div>
 
-            {(reportData.top5_buckets || []).map((bucket, index) => (
+            {(displayData.top5_buckets || []).map((bucket, index) => (
               <Card key={index} className="border-l-4 border-primary">
                 <CardHeader>
                   <div className="flex items-center justify-between">
