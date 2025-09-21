@@ -247,7 +247,7 @@ const ReportViewer = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {Object.entries(reportData.vibe_scores).map(([key, value]) => {
+                {Object.entries(reportData.vibe_scores || {}).map(([key, value]) => {
                   const info = riasecLabels[key as keyof typeof riasecLabels];
                   return (
                     <div key={key} className="space-y-3">
@@ -279,7 +279,7 @@ const ReportViewer = () => {
               </p>
             </div>
 
-            {reportData.top5_buckets.map((bucket, index) => (
+            {(reportData.top5_buckets || []).map((bucket, index) => (
               <Card key={index} className="border-l-4 border-primary">
                 <CardHeader>
                   <div className="flex items-center justify-between">
@@ -298,7 +298,7 @@ const ReportViewer = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {bucket.topCareers.slice(0, 3).map((career, careerIndex) => (
+                    {(bucket.topCareers || []).slice(0, 3).map((career, careerIndex) => (
                       <div key={careerIndex} className="border rounded-lg p-4 space-y-3">
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
@@ -314,7 +314,7 @@ const ReportViewer = () => {
                           <div>
                             <h5 className="font-medium text-sm">Top Reasons:</h5>
                             <ul className="text-sm text-muted-foreground ml-4 list-disc">
-                              {career.topReasons.map((reason, idx) => (
+                              {(career.topReasons || []).map((reason, idx) => (
                                 <li key={idx}>{reason}</li>
                               ))}
                             </ul>
@@ -328,7 +328,7 @@ const ReportViewer = () => {
                           <div>
                             <h5 className="font-medium text-sm">First 3 Steps:</h5>
                             <ol className="text-sm text-muted-foreground ml-4 list-decimal">
-                              {career.first3Steps.map((step, idx) => (
+                              {(career.first3Steps || []).map((step, idx) => (
                                 <li key={idx}>{step}</li>
                               ))}
                             </ol>
