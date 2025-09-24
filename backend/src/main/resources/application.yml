@@ -1,0 +1,155 @@
+# Naviksha AI Backend Configuration
+# 
+# CONFIGURATION OVERVIEW:
+# - MongoDB connection and settings
+# - JWT security configuration  
+# - Server port and context settings
+# - Logging levels and patterns
+# - CORS and security settings
+#
+# ENVIRONMENT VARIABLES (Required):
+# - MONGO_URI: MongoDB connection string
+# - JWT_SECRET: Secret key for JWT token signing
+# - ADMIN_SECRET: Secret for admin access (optional)
+#
+# HOW TO RUN:
+# Development: mvn spring-boot:run -Dspring.profiles.active=dev
+# Production: java -jar naviksha-backend.jar --spring.profiles.active=prod
+
+spring:
+  application:
+    name: naviksha-backend
+  
+  profiles:
+    active: ${SPRING_PROFILES_ACTIVE:dev}
+  
+  # MongoDB Configuration
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/naviksha}
+      auto-index-creation: true
+  
+  # Jackson JSON Configuration
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+  
+  # Multipart Configuration
+  servlet:
+    multipart:
+      max-file-size: 10MB
+      max-request-size: 10MB
+
+# Server Configuration
+server:
+  port: ${PORT:4000}
+  servlet:
+    context-path: /
+  error:
+    include-message: always
+    include-binding-errors: always
+
+# JWT Configuration
+jwt:
+  secret: ${JWT_SECRET:naviksha-super-secret-key-change-in-production}
+  expiration: 86400000  # 24 hours in milliseconds
+
+# Admin Configuration
+admin:
+  secret: ${ADMIN_SECRET:}  # Optional admin secret for initial access
+
+# Logging Configuration
+logging:
+  level:
+    com.naviksha: INFO
+    org.springframework.security: WARN
+    org.springframework.data.mongodb: WARN
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} - %msg%n"
+    file: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
+
+# Actuator Configuration
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics
+  endpoint:
+    health:
+      show-details: when-authorized
+
+# OpenAPI Documentation
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+    tags-sorter: alpha
+    operations-sorter: alpha
+
+---
+# Development Profile
+spring:
+  config:
+    activate:
+      on-profile: dev
+  
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/naviksha_dev}
+  
+  # Enable debug logging in development
+logging:
+  level:
+    com.naviksha: DEBUG
+    org.springframework.web: DEBUG
+    org.springframework.security: DEBUG
+
+# Development JWT with shorter expiration for testing
+jwt:
+  expiration: 3600000  # 1 hour
+
+---
+# Test Profile
+spring:
+  config:
+    activate:
+      on-profile: test
+  
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/naviksha_test}
+
+# Test JWT with very short expiration
+jwt:
+  secret: test-secret-key
+  expiration: 300000  # 5 minutes
+
+logging:
+  level:
+    com.naviksha: WARN
+    org.springframework: WARN
+
+---
+# Production Profile
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+# Production logging - more conservative
+logging:
+  level:
+    root: WARN
+    com.naviksha: INFO
+  file:
+    name: /var/log/naviksha/application.log
+
+# Production server settings
+server:
+  compression:
+    enabled: true
+    mime-types: text/html,text/xml,text/plain,text/css,text/javascript,application/javascript,application/json
+  http2:
+    enabled: true

@@ -1,0 +1,108 @@
+# Naviksha AI Backend - Docker Compose Setup
+#
+# SERVICES:
+# - MongoDB: Database for storing users, careers, tests, reports
+# - Naviksha Backend: Spring Boot API server
+# - Mongo Express: Optional web UI for MongoDB management
+#
+# USAGE:
+# Start all services: docker-compose up --build
+# Start in background: docker-compose up -d --build
+# Stop services: docker-compose down
+# View logs: docker-compose logs -f naviksha-backend
+# Access MongoDB UI: http://localhost:8081 (admin/pass)
+#
+# ENVIRONMENT VARIABLES:
+# Create .env file with required variables (see .env.example)
+# - JWT_SECRET: Strong secret for JWT token signing
+# - ADMIN_SECRET: Secret for admin access
+# 
+# PORTS:
+# - 4000: Naviksha Backend API
+# - 27017: MongoDB (for external connections)
+# - 8081: Mongo Express Web UI (optional)
+
+version: '3.8'
+
+services:
+  # MongoDB Database
+  mongo:
+    image: mongo:6.0
+    container_name: naviksha-mongo
+    restart: unless-stopped
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: admin
+      MONGO_INITDB_ROOT_PASSWORD: password
+      MONGO_INITDB_DATABASE: naviksha
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+      - mongo_config:/data/configdb
+    networks:
+      - naviksha-network
+    healthcheck:
+      test: echo 'db.runCommand("ping").ok' | mongosh localhost:27017/naviksha --quiet
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Naviksha Backend API
+  naviksha-backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: naviksha-backend
+    restart: unless-stopped
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      MONGO_URI: mongodb://admin:password@mongo:27017/naviksha?authSource=admin
+      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      ADMIN_SECRET: ${ADMIN_SECRET:-admin-secret-123}
+      PORT: 4000
+    ports:
+      - "4000:4000"
+    depends_on:
+      mongo:
+        condition: service_healthy
+    networks:
+      - naviksha-network
+    volumes:
+      - ./backend/logs:/var/log/naviksha
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+
+  # Optional: MongoDB Web UI
+  mongo-express:
+    image: mongo-express:latest
+    container_name: naviksha-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_ADMINUSERNAME: admin
+      ME_CONFIG_MONGODB_ADMINPASSWORD: password
+      ME_CONFIG_MONGODB_URL: mongodb://admin:password@mongo:27017/
+      ME_CONFIG_BASICAUTH_USERNAME: admin
+      ME_CONFIG_BASICAUTH_PASSWORD: pass
+    depends_on:
+      - mongo
+    networks:
+      - naviksha-network
+
+volumes:
+  mongo_data:
+    driver: local
+  mongo_config:
+    driver: local
+
+networks:
+  naviksha-network:
+    driver: bridge
+
+# Development overrides
+# Create docker-compose.override.yml for local development settings
