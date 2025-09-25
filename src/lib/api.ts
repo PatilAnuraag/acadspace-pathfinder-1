@@ -53,9 +53,40 @@ class ApiService {
 
   private async handleResponse<T>(response: Response): Promise<T> {
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({ message: 'Network error' }));
-      throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      // Try to extract body text (JSON or plain text)
+      const raw = await response.text().catch(() => null);
+      let errorMsg = `HTTP error ${response.status}`;
+
+      if (raw) {
+        try {
+          const parsed = JSON.parse(raw);
+          // prefer common fields
+          errorMsg = parsed.message || parsed.error || JSON.stringify(parsed);
+        } catch {
+          // not JSON — use raw text
+          errorMsg = raw;
+        }
+      }
+
+      // Log full details for debugging (visible in device/Render logs)
+      console.error('API error', {
+        url: response.url,
+        status: response.status,
+        statusText: response.statusText,
+        body: raw,
+        message: errorMsg
+      });
+
+      throw new Error(errorMsg);
     }
+
+    // If no content, return empty
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      const txt = await response.text().catch(() => (null as any));
+      return txt as unknown as T;
+    }
+
     return response.json();
   }
 
@@ -68,7 +99,7 @@ class ApiService {
     });
 
     const data = await this.handleResponse<AuthResponse>(response);
-    
+
     if (data.token) {
       this.token = data.token;
       localStorage.setItem('auth_token', data.token);
@@ -86,7 +117,7 @@ class ApiService {
     });
 
     const data = await this.handleResponse<AuthResponse>(response);
-    
+
     if (data.token) {
       this.token = data.token;
       localStorage.setItem('auth_token', data.token);
@@ -162,10 +193,10 @@ class ApiService {
   }
 
   async getProgress(userId: string, testId?: string): Promise<any> {
-    const url = testId 
+    const url = testId
       ? `${API_BASE_URL}/progress/${userId}?testId=${testId}`
       : `${API_BASE_URL}/progress/${userId}`;
-    
+
     const response = await fetch(url, {
       headers: this.getHeaders(),
     });

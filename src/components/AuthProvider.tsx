@@ -83,9 +83,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(response.user);
       toast.success('Account created successfully');
     } catch (error: any) {
-      toast.error(error.message || 'Registration failed');
+      // Log full error object for debugging (Render logs / device logs)
+      console.error('signUp error:', error);
+
+      // Show exact server message when available (dev-friendly)
+      const userMessage = error?.message || error?.toString() || 'Registration failed';
+      toast.error(userMessage);
+
       throw error;
     }
+
   };
 
   const signOut = async () => {
