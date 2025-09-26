@@ -107,7 +107,7 @@ logging:
 
 # Development JWT with shorter expiration for testing
 jwt:
-  expiration: 3600000  # 1 hour
+  expiration: 72864000 
 
 ---
 # Test Profile
