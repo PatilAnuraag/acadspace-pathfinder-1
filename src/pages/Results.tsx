@@ -23,10 +23,11 @@ import {
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
-import { supabase } from '@/integrations/supabase/client';
+import { apiService } from '@/lib/api';
 import { CareerCard } from '@/components/CareerCard';
 import uiMicrocopy from '@/data/ui_microcopy.json';
 import sampleReport from '@/data/sample_report_Aisha.json';
+import { toast } from '@/hooks/use-toast';
 
 const Results = () => {
   const navigate = useNavigate();
@@ -49,78 +50,53 @@ const Results = () => {
 
   const checkTestCompletion = async () => {
     try {
-      // Check completed test sessions
-      const { data: sessions, error } = await supabase
-        .from('test_sessions')
-        .select('test_type, status')
-        .eq('user_id', user.id)
-        .eq('status', 'completed');
+      // Check if user has completed progress for both tests
+      const vibeProgress = await apiService.getProgress(user.id, 'vibematch');
+      const eduProgress = await apiService.getProgress(user.id, 'edustats');
 
-      if (error) {
-        console.error('Error fetching test sessions:', error);
-        return;
-      }
-
-      const vibematchComplete = sessions?.some(s => s.test_type === 'vibematch');
-      const edustatsComplete = sessions?.some(s => s.test_type === 'edustats');
+      const vibematchComplete = vibeProgress?.completed || false;
+      const edustatsComplete = eduProgress?.completed || false;
       
       setTestsCompleted({ 
-        vibematch: vibematchComplete || false, 
-        edustats: edustatsComplete || false 
+        vibematch: vibematchComplete, 
+        edustats: edustatsComplete 
       });
 
-      // If both tests completed, generate/fetch report
+      // If both tests completed, fetch report
       if (vibematchComplete && edustatsComplete) {
-        await generateOrFetchReport();
+        await fetchReport();
       }
     } catch (error) {
       console.error('Error checking test completion:', error);
+      toast({
+        title: "Error",
+        description: "Failed to check test completion status",
+        variant: "destructive"
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const generateOrFetchReport = async () => {
+  const fetchReport = async () => {
     try {
-      // Check if report already exists
-      const { data: existingReport, error: reportError } = await supabase
-        .from('career_reports')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (reportError && reportError.code !== 'PGRST116') {
-        console.error('Error fetching existing report:', reportError);
-        return;
-      }
-
-      if (existingReport) {
-        setReportData(existingReport.report_data);
+      // Try to fetch existing report from backend
+      // Note: Backend should have generated this when test was submitted
+      const reports = await apiService.getUserReports(user.id);
+      
+      if (reports && reports.length > 0) {
+        // Get the most recent report
+        const latestReport = reports[0];
+        setReportData(latestReport.reportData);
       } else {
-        // Generate new report using sample data structure
-        // In a real implementation, you'd process the actual test answers
-        const generatedReport = {
-          ...sampleReport,
-          studentName: user.email.split('@')[0], // Use email username as fallback
-          generated_at: new Date().toISOString()
-        };
-
-        // Save generated report
-        const { error: insertError } = await supabase
-          .from('career_reports')
-          .insert({
-            user_id: user.id,
-            report_data: generatedReport
-          });
-
-        if (insertError) {
-          console.error('Error saving report:', insertError);
-        } else {
-          setReportData(generatedReport);
-        }
+        // If no report exists, show sample data as fallback
+        console.log('No report found, using sample data');
+        setReportData(sampleReport);
       }
     } catch (error) {
-      console.error('Error generating report:', error);
+      console.error('Error fetching report:', error);
+      // Fallback to sample data
+      setReportData(sampleReport);
     }
   };
   

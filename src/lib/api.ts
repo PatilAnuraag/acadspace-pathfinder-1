@@ -196,6 +196,25 @@ class ApiService {
     return this.handleResponse<any>(response);
   }
 
+  async getUserReports(userId: string): Promise<any[]> {
+    try {
+      const response = await fetch(`${API_BASE_URL}/reports/user/${userId}`, {
+        headers: this.getHeaders(),
+      });
+      
+      if (response.status === 404) {
+        return []; // No reports found
+      }
+      
+      return this.handleResponse<any[]>(response);
+    } catch (error: any) {
+      if (error.message?.includes('404')) {
+        return [];
+      }
+      throw error;
+    }
+  }
+
   // Health check
   async healthCheck(): Promise<any> {
     const response = await fetch(`${API_HEALTH_CHECK_URL}`);
