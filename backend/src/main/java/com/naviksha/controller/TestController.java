@@ -3,6 +3,7 @@ package com.naviksha.controller;
 import com.naviksha.dto.TestSubmissionDTO;
 import com.naviksha.model.*;
 import com.naviksha.service.*;
+import com.naviksha.service.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +50,7 @@ public class TestController {
     private final ScoringService scoringService;
     private final ReportService reportService;
     private final UserService userService;
+    private final EmailService emailService;
 
     @GetMapping("/tests")
     @Operation(summary = "Get available tests", description = "List all available career assessment tests")
@@ -117,6 +119,15 @@ public class TestController {
             
             // Save report to database
             Report savedReport = reportService.saveReport(report, user.getId());
+            
+            // Send email with PDF report
+            try {
+                emailService.sendReportEmail(report, user.getEmail(), user.getName());
+                log.info("Email sent successfully to: {} for student: {}", user.getEmail(), user.getName());
+            } catch (Exception e) {
+                log.error("Failed to send email to: {} for student: {}", user.getEmail(), user.getName(), e);
+                // Don't fail the entire request if email fails
+            }
             
             // Note: Progress is kept for user retake capability and completion tracking
             // Progress is only cleared when user explicitly starts a new test

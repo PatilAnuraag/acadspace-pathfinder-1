@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Career Assessment Report</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #2563eb;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+            color: #2563eb;
+            margin-bottom: 10px;
+        }
+        .subtitle {
+            color: #6b7280;
+            font-size: 16px;
+        }
+        .greeting {
+            font-size: 18px;
+            margin-bottom: 20px;
+            color: #1f2937;
+        }
+        .content {
+            margin-bottom: 25px;
+        }
+        .highlight-box {
+            background-color: #eff6ff;
+            border-left: 4px solid #2563eb;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+        .career-list {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 15px 0;
+        }
+        .career-item {
+            margin: 8px 0;
+            padding: 8px;
+            background-color: white;
+            border-radius: 3px;
+            border-left: 3px solid #10b981;
+        }
+        .footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 14px;
+        }
+        .cta-button {
+            display: inline-block;
+            background-color: #2563eb;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .cta-button:hover {
+            background-color: #1d4ed8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">Naviksha AI</div>
+            <div class="subtitle">Your Dreams to Reality Handbook</div>
+        </div>
+        
+        <div class="greeting">
+            Hello <span th:text="${studentName}">Student</span>!
+        </div>
+        
+        <div class="content">
+            <p>Congratulations on completing your career assessment! We're excited to share your personalized career report with you.</p>
+            
+            <div class="highlight-box">
+                <h3 style="margin-top: 0; color: #2563eb;">📊 Your Assessment Results</h3>
+                <p>Based on your responses to our comprehensive career assessment, we've analyzed your:</p>
+                <ul>
+                    <li>Personality traits (RIASEC assessment)</li>
+                    <li>Academic strengths and interests</li>
+                    <li>Extracurricular activities and preferences</li>
+                    <li>Career aspirations and goals</li>
+                </ul>
+            </div>
+            
+            <div class="career-list" th:if="${topCareers != null and !topCareers.isEmpty()}">
+                <h3 style="margin-top: 0; color: #059669;">🎯 Your Top Career Matches</h3>
+                <div th:each="career : ${topCareers}" class="career-item">
+                    <strong th:text="${career}">Career Name</strong>
+                </div>
+                <p style="margin-bottom: 0; font-size: 14px; color: #6b7280;">
+                    <em>See the attached PDF for detailed analysis and recommendations!</em>
+                </p>
+            </div>
+            
+            <h3>📋 What's Included in Your Report</h3>
+            <ul>
+                <li><strong>Detailed Career Analysis:</strong> In-depth insights into your top career matches</li>
+                <li><strong>Personality Assessment:</strong> Your RIASEC personality profile</li>
+                <li><strong>Educational Pathways:</strong> Recommended courses and qualifications</li>
+                <li><strong>Action Steps:</strong> Practical next steps to pursue your career goals</li>
+                <li><strong>Skills Development:</strong> Areas to focus on for career success</li>
+            </ul>
+            
+            <div class="highlight-box">
+                <h3 style="margin-top: 0; color: #2563eb;">🚀 Next Steps</h3>
+                <p>Your career journey starts now! Here's what you can do:</p>
+                <ol>
+                    <li>Review your detailed report (attached PDF)</li>
+                    <li>Research the recommended career paths</li>
+                    <li>Connect with professionals in your areas of interest</li>
+                    <li>Start building relevant skills and experience</li>
+                </ol>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p><strong>Generated on:</strong> <span th:text="${#temporals.format(reportDate, 'MMMM dd, yyyy')}">Date</span></p>
+            <p>This report was generated by Naviksha AI's advanced career assessment system.</p>
+            <p>If you have any questions about your results, feel free to reach out to our support team.</p>
+            
+            <div style="margin-top: 20px;">
+                <a href="#" class="cta-button">View Full Report</a>
+            </div>
+            
+            <p style="margin-top: 20px; font-size: 12px;">
+                © 2024 Naviksha AI. All rights reserved.<br>
+                This email was sent to you because you completed a career assessment on our platform.
+            </p>
+        </div>
+    </div>
+</body>
+</html>
+
+
