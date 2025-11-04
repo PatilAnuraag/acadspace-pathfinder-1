@@ -74,7 +74,7 @@ export interface StudentReport {
   studentName: string;
   grade?: number;
   board?: string;
-  vibe_scores: RiasecScores;
+  vibeScores: RiasecScores;
   edu_stats: { [subject: string]: number };
   extracurriculars?: string[];
   parents?: string[];
@@ -82,6 +82,20 @@ export interface StudentReport {
   summaryParagraph: string;
   reportId: string;
   generatedAt: Date;
+  // AI Enhancement fields
+  aiEnhanced?: boolean;
+  enhancedSummary?: string;
+  skillRecommendations?: string[]; // Focused skill names
+  detailedSkillRecommendations?: Array<{skill_name?: string; skillName?: string; explanation?: string}>; // For grade < 8: [{skill_name, explanation}]
+  careerTrajectoryInsights?: string;
+  detailedCareerInsights?: {
+    career_name: string;
+    explanation: string;
+    study_path: string[];
+    next_steps: string[];
+    confidence: string;
+    what_would_change: string;
+  }[];
 }
 
 export interface User {

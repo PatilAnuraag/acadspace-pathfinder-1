@@ -22,4 +22,12 @@ public class StudentReport {
     private List<String> parents;
     private List<CareerBucket> top5Buckets;
     private String summaryParagraph;
+    
+    // AI Enhancement Fields
+    private Boolean aiEnhanced;
+    private String enhancedSummary;
+    private List<String> skillRecommendations; // Focused skill names
+    private List<Map<String, String>> detailedSkillRecommendations; // For grade < 8: [{skill_name, explanation}]
+    private String careerTrajectoryInsights;
+    private Map<String, Object> detailedCareerInsights;
 }

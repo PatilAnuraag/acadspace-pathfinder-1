@@ -29,6 +29,8 @@ import {
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '@/components/AuthProvider';
 import { apiService } from '@/lib/api';
+import { AIFallbackNotice } from '@/components/AIFallbackNotice';
+import { generatePDFBlob, type ReportData } from '@/lib/pdf-generator';
 
 const ReportViewer = () => {
   const navigate = useNavigate();
@@ -55,9 +57,33 @@ const ReportViewer = () => {
       setLoading(true);
 
       if (reportId) {
-        // Fetch specific report by ID
+        // Fetch specific report by ID from Java backend
         const report = await apiService.getReport(reportId);
+        console.log('Using report from database:', {
+          reportId: reportId,
+          aiEnhanced: report?.aiEnhanced,
+          hasEnhancedSummary: !!report?.enhancedSummary,
+          hasSkillRecommendations: !!report?.skillRecommendations
+        });
         setReportData(report);
+      } else if (user?.id) {
+        // Fetch user's latest report from Java backend
+        const reports = await apiService.getUserReports(user.id);
+        
+        if (reports && reports.length > 0) {
+          const latestReport = reports[0];
+          console.log('Using latest report from database:', {
+            reportId: latestReport.id,
+            aiEnhanced: latestReport.reportData?.aiEnhanced,
+            hasEnhancedSummary: !!latestReport.reportData?.enhancedSummary,
+            hasSkillRecommendations: !!latestReport.reportData?.skillRecommendations
+          });
+          setReportData(latestReport.reportData);
+        } else {
+          // Load demo report for now
+          const demoReport = await apiService.getDemoReport();
+          setReportData(demoReport);
+        }
       } else {
         // Load demo report for now
         const demoReport = await apiService.getDemoReport();
@@ -86,9 +112,53 @@ const ReportViewer = () => {
     C: { name: 'Conventional', description: 'Organized, detail-oriented, systematic' }
   };
 
-  const handleDownload = () => {
-    // TODO: Implement PDF generation
-    console.log('Downloading report...');
+  const handleDownload = async () => {
+    try {
+      // Prepare report data matching the ReportData interface
+      const reportData: ReportData = {
+        studentName: displayData.studentName,
+        schoolName: displayData.schoolName,
+        grade: displayData.grade,
+        board: displayData.board,
+        vibeScores: displayData.vibeScores,
+        top5_buckets: displayData.top5_buckets,
+        summaryParagraph: displayData.summaryParagraph,
+        enhancedSummary: displayData.enhancedSummary,
+        skillRecommendations: displayData.skillRecommendations,
+        careerTrajectoryInsights: displayData.careerTrajectoryInsights,
+        detailedCareerInsights: displayData.detailedCareerInsights
+      };
+
+      // Generate PDF using shared utility
+      const pdfBlob = generatePDFBlob(reportData);
+      
+      // Create download link
+      const studentName = displayData.studentName || 'Student';
+      const cleanName = studentName.replace(/[^a-zA-Z0-9\s]/g, '').replace(/\s+/g, '_');
+      const dateStr = new Date().toISOString().split('T')[0];
+      const fileName = `Career_Report_${cleanName}_${dateStr}.pdf`;
+      
+      console.log('Generating PDF with filename:', fileName);
+      
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      link.style.display = 'none';
+      link.setAttribute('download', fileName);
+      link.setAttribute('type', 'application/pdf');
+      
+      document.body.appendChild(link);
+      setTimeout(() => {
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+      }, 50);
+
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF. Please try again.');
+    }
   };
 
   const handleShare = () => {
@@ -130,15 +200,32 @@ const ReportViewer = () => {
     );
   }
 
+  // Debug: Log the reportData to see what we're getting
+  console.log('ReportViewer - reportData:', {
+    hasReportData: !!reportData,
+    aiEnhanced: reportData?.aiEnhanced,
+    hasEnhancedSummary: !!reportData?.enhancedSummary,
+    hasSkillRecommendations: !!reportData?.skillRecommendations,
+    hasCareerTrajectoryInsights: !!reportData?.careerTrajectoryInsights,
+    hasDetailedCareerInsights: !!reportData?.detailedCareerInsights,
+    fullReportData: reportData
+  });
+
   // Use dynamic data
   const displayData = {
     studentName: reportData?.studentName || user?.name || user?.email?.split('@')[0] || 'Student',
     schoolName: 'Your School',
     grade: reportData?.grade || 11,
     board: reportData?.board || 'CBSE',
-    vibe_scores: reportData?.vibeScores || reportData?.vibe_scores || {},
+    vibeScores: reportData?.vibeScores || reportData?.vibe_scores || {},
     top5_buckets: reportData?.top5Buckets || reportData?.top5_buckets || [],
-    summaryParagraph: reportData?.summaryParagraph || 'Your personalized career analysis is being generated based on your assessment responses.'
+    summaryParagraph: reportData?.summaryParagraph || 'Your personalized career analysis is being generated based on your assessment responses.',
+    // AI Enhancement fields
+    aiEnhanced: reportData?.aiEnhanced || false,
+    enhancedSummary: reportData?.enhancedSummary || null,
+    skillRecommendations: reportData?.skillRecommendations || [],
+    careerTrajectoryInsights: reportData?.careerTrajectoryInsights || null,
+    detailedCareerInsights: reportData?.detailedCareerInsights || null
   };
 
   return (
@@ -224,12 +311,22 @@ const ReportViewer = () => {
       </div>
 
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-6xl">
+        {/* AI Fallback Notice */}
+        {displayData && !displayData.aiEnhanced && (
+          <AIFallbackNotice className="mb-6" />
+        )}
+
         {/* Navigation Tabs */}
         <div className="flex flex-wrap gap-2 mb-6 md:mb-8">
           {[
             { id: 'overview', label: 'Overview', icon: Target },
             { id: 'personality', label: 'Personality', icon: TrendingUp },
             { id: 'careers', label: 'Careers', icon: Briefcase },
+            ...(displayData.aiEnhanced ? [
+              { id: 'ai-skills', label: 'AI Skills', icon: Lightbulb },
+              { id: 'ai-trajectory', label: 'AI Trajectory', icon: TrendingUp },
+              { id: 'ai-insights', label: 'AI Insights', icon: Star }
+            ] : []),
             { id: 'next-steps', label: 'Next Steps', icon: ArrowRight }
           ].map(tab => (
             <Button
@@ -255,8 +352,15 @@ const ReportViewer = () => {
                   <div className="w-10 h-10 md:w-12 md:h-12 bg-primary rounded-full flex items-center justify-center flex-shrink-0">
                     <Star className="w-5 h-5 md:w-6 md:h-6 text-primary-foreground" />
                   </div>
-                  <div className="min-w-0">
-                    <CardTitle className="text-lg md:text-xl">Career Profile Summary</CardTitle>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <CardTitle className="text-lg md:text-xl">Career Profile Summary</CardTitle>
+                      {displayData.aiEnhanced && (
+                        <Badge variant="default" className="bg-green-600">
+                          🤖 AI Enhanced
+                        </Badge>
+                      )}
+                    </div>
                     <p className="text-sm md:text-base text-muted-foreground">
                       AI-Powered Career Analysis Results
                     </p>
@@ -265,7 +369,7 @@ const ReportViewer = () => {
               </CardHeader>
               <CardContent>
                 <p className="text-sm md:text-base lg:text-lg text-foreground leading-relaxed">
-                  {displayData.summaryParagraph}
+                  {displayData.enhancedSummary || displayData.summaryParagraph}
                 </p>
               </CardContent>
             </Card>
@@ -327,7 +431,7 @@ const ReportViewer = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-6">
-                {Object.entries(displayData.vibe_scores || {}).map(([key, value]) => {
+                {Object.entries(displayData.vibeScores || {}).map(([key, value]) => {
                   const info = riasecLabels[key as keyof typeof riasecLabels];
                   const score = Number(value) || 0;
                   return (
@@ -421,6 +525,132 @@ const ReportViewer = () => {
                 </CardContent>
               </Card>
             ))}
+          </div>
+        )}
+
+        {/* AI Skill Recommendations Tab */}
+        {activeTab === 'ai-skills' && displayData.skillRecommendations && displayData.skillRecommendations.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5" />
+                AI-Recommended Skills to Develop
+                <Badge variant="default" className="bg-blue-600">
+                  🤖 AI Powered
+                </Badge>
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Personalized skill development recommendations based on your profile
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4">
+                {displayData.skillRecommendations.map((skill, index) => (
+                  <div key={index} className="flex items-start gap-4 p-4 bg-muted/50 rounded-lg">
+                    <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-sm font-bold flex-shrink-0">
+                      {index + 1}
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-foreground leading-relaxed">{skill}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI Career Trajectory Tab */}
+        {activeTab === 'ai-trajectory' && displayData.careerTrajectoryInsights && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5" />
+                Career Trajectory Insights
+                <Badge variant="default" className="bg-purple-600">
+                  🤖 AI Powered
+                </Badge>
+              </CardTitle>
+              <p className="text-muted-foreground">
+                Long-term career path analysis and recommendations
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="prose prose-sm max-w-none">
+                <p className="text-foreground leading-relaxed whitespace-pre-line">
+                  {displayData.careerTrajectoryInsights}
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* AI Detailed Insights Tab */}
+        {activeTab === 'ai-insights' && displayData.detailedCareerInsights && (
+          <div className="space-y-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Lightbulb className="w-5 h-5" />
+                  Detailed Career Explanations
+                  <Badge variant="default" className="bg-orange-600">
+                    🤖 AI Powered
+                  </Badge>
+                </CardTitle>
+                <p className="text-muted-foreground">
+                  In-depth analysis of why each career recommendation fits your profile
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {displayData.detailedCareerInsights.explanations && 
+                   Object.entries(displayData.detailedCareerInsights.explanations).map(([career, explanation]) => (
+                    <div key={career} className="p-4 border rounded-lg">
+                      <h4 className="font-semibold text-lg mb-2">{career}</h4>
+                      <p className="text-muted-foreground leading-relaxed">{String(explanation)}</p>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {displayData.detailedCareerInsights.studyPaths && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <BookOpen className="w-5 h-5" />
+                    Personalized Study Paths
+                    <Badge variant="default" className="bg-green-600">
+                      🤖 AI Powered
+                    </Badge>
+                  </CardTitle>
+                  <p className="text-muted-foreground">
+                    Customized educational roadmap for your career goals
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Object.entries(displayData.detailedCareerInsights.studyPaths).map(([career, path]) => (
+                      <div key={career} className="p-4 border rounded-lg">
+                        <h4 className="font-semibold text-lg mb-2">{career}</h4>
+                        <div className="space-y-2">
+                          {Array.isArray(path) ? path.map((step, index) => (
+                            <div key={index} className="flex items-start gap-2">
+                              <div className="w-6 h-6 bg-primary rounded-full flex items-center justify-center text-primary-foreground text-xs font-bold flex-shrink-0 mt-0.5">
+                                {index + 1}
+                              </div>
+                              <p className="text-muted-foreground">{String(step)}</p>
+                            </div>
+                          )) : (
+                            <p className="text-muted-foreground">{String(path)}</p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
           </div>
         )}
 

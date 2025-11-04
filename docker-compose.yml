@@ -57,9 +57,19 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       MONGO_URI: mongodb://admin:password@mongo:27017/naviksha?authSource=admin
-      JWT_SECRET: ${JWT_SECRET:-your-super-secret-jwt-key-change-in-production}
+      JWT_SECRET: ${JWT_SECRET:-naviksha-super-secret-key-change-in-production-this-is-a-very-long-secret-key-for-jwt-hs512-algorithm-requirement}
       ADMIN_SECRET: ${ADMIN_SECRET:-admin-secret-123}
       PORT: 4000
+      AI_SERVICE_URL: http://ai-report-service:8000
+      PDF_SERVICE_URL: http://pdf-service:5100
+      # Email Configuration
+      EMAIL_ENABLED: ${EMAIL_ENABLED:-true}
+      EMAIL_FROM: ${EMAIL_FROM:-naviksha@example.com}
+      EMAIL_FROM_NAME: ${EMAIL_FROM_NAME:-Naviksha AI}
+      MAIL_HOST: ${MAIL_HOST:-smtp.gmail.com}
+      MAIL_PORT: ${MAIL_PORT:-587}
+      MAIL_USERNAME: ${MAIL_USERNAME:-}
+      MAIL_PASSWORD: ${MAIL_PASSWORD:-}
     ports:
       - "4000:4000"
     depends_on:
@@ -75,6 +85,51 @@ services:
       timeout: 10s
       retries: 3
       start_period: 60s
+
+  # AI Report Generation Service
+  ai-report-service:
+    build:
+      context: ./ai-report-service
+      dockerfile: Dockerfile
+    container_name: ai-report-service
+    restart: unless-stopped
+    environment:
+      AI_SERVICE_URL: http://ai-report-service:8000
+      AI_MODEL_API_KEY: ${AI_MODEL_API_KEY:-your-api-key-here}
+      AI_MODEL_PROVIDER: ${AI_MODEL_PROVIDER:-groq}
+      AI_MODEL_NAME: ${AI_MODEL_NAME:-llama3-8b-8192}
+      PORT: 8000
+      HOST: 0.0.0.0
+    ports:
+      - "8000:8000"
+    networks:
+      - naviksha-network
+    healthcheck:
+      test: ["CMD", "python3", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  # PDF Generation Service (Node.js - uses same jsPDF logic as frontend)
+  pdf-service:
+    build:
+      context: ./pdf-service
+      dockerfile: Dockerfile
+    container_name: pdf-service
+    restart: unless-stopped
+    environment:
+      PORT: 5100
+    ports:
+      - "5100:5100"
+    networks:
+      - naviksha-network
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:5100/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
 
   # Optional: MongoDB Web UI
   mongo-express:

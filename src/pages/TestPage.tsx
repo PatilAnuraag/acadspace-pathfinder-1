@@ -92,6 +92,25 @@ const TestPage = () => {
       try {
         const progress = await apiService.getProgress(user.id, testType);
         if (progress) {
+          // Check if test is already completed
+          if (progress.completed) {
+            if (testType === 'vibematch') {
+              toast({
+                title: 'Personality test already completed! ✅',
+                description: 'Moving to academic background assessment.',
+              });
+              navigate('/test/edustats');
+              return;
+            } else {
+              toast({
+                title: 'All tests already completed! 🎉',
+                description: 'Redirecting to your report...',
+              });
+              navigate('/report');
+              return;
+            }
+          }
+
           setCurrentQuestionIndex(progress.currentQuestionIndex || 0);
 
           // Convert progress answers to TestAnswer format
@@ -122,10 +141,12 @@ const TestPage = () => {
     }
   }, [user?.id, testType, testName, questions.length]);
 
-  // Auto-save progress
+  // Auto-save progress when moving to next question
   useEffect(() => {
     const saveProgress = async () => {
-      if (!user?.id || !testType || saving || answers.length === 0) return;
+      if (!user?.id || !testType || saving || answers.length === 0) {
+        return;
+      }
 
       setSaving(true);
       try {
@@ -144,9 +165,12 @@ const TestPage = () => {
       }
     };
 
-    const timer = setTimeout(saveProgress, 2000);
-    return () => clearTimeout(timer);
-  }, [answers, currentQuestionIndex, user?.id, testType, saving]);
+    // Save when question index changes (user moves to next question)
+    if (answers.length > 0) {
+      const timer = setTimeout(saveProgress, 1000); // Small delay to avoid rapid saves
+      return () => clearTimeout(timer);
+    }
+  }, [currentQuestionIndex, user?.id, testType, saving]);
 
   // Load existing answer for current question (safe)
   useEffect(() => {
@@ -236,6 +260,19 @@ const TestPage = () => {
     if (!user?.id) return;
 
     try {
+      // Save progress as completed before navigation
+      const answersObject = answers.reduce<Record<string, any>>((acc, answer) => {
+        acc[answer.questionId] = answer.answer;
+        return acc;
+      }, {});
+
+      await apiService.saveProgress(testType!, {
+        currentQuestionIndex: questions.length - 1,
+        answers: answersObject,
+        completed: true,
+      });
+
+
       if (testType === 'vibematch') {
         toast({
           title: 'Personality test complete! ✅',
@@ -248,23 +285,51 @@ const TestPage = () => {
           description: 'Generating your personalized career report...',
         });
 
-        // Submit combined test results to backend
-        const answersObject = answers.reduce<Record<string, any>>((acc, answer) => {
+        // Get vibematch answers from database
+        const vibematchProgress = await apiService.getProgress(user.id, 'vibematch');
+        const edustatsAnswers = answers.reduce<Record<string, any>>((acc, answer) => {
           acc[answer.questionId] = answer.answer;
           return acc;
         }, {});
 
+        // Check if vibematch test was completed
+        if (!vibematchProgress || !vibematchProgress.completed) {
+          toast({
+            title: 'Error: Personality test not completed',
+            description: 'Please complete the personality test first before generating your report.',
+            variant: 'destructive',
+          });
+          navigate('/test/vibematch');
+          return;
+        }
+
+        // Combine both test results into a flat structure
+        const combinedAnswers = {
+          ...(vibematchProgress.answers || {}),
+          ...edustatsAnswers,
+        };
+
         const submission = {
           userName: user.name,
-          grade: parseInt(answersObject.e_01) || 11,
-          board: answersObject.e_02 || 'CBSE',
-          answers: answersObject,
-          subjectScores: extractSubjectScores(answersObject),
-          extracurriculars: extractExtracurriculars(answersObject),
-          parentCareers: extractParentCareers(answersObject),
+          grade: parseInt(edustatsAnswers.e_01) || 11,
+          board: edustatsAnswers.e_02 || 'CBSE',
+          answers: combinedAnswers,
+          subjectScores: extractSubjectScores(edustatsAnswers),
+          extracurriculars: extractExtracurriculars(edustatsAnswers),
+          parentCareers: extractParentCareers(edustatsAnswers),
         };
 
         const result = await apiService.submitTest('combined', submission);
+
+        // Store the AI-enhanced report data in localStorage for immediate use
+        if (result?.report) {
+          localStorage.setItem('latestReport', JSON.stringify(result.report));
+          console.log('AI-enhanced report stored:', {
+            aiEnhanced: result.report.aiEnhanced,
+            hasEnhancedSummary: !!result.report.enhancedSummary,
+            hasSkillRecommendations: !!result.report.skillRecommendations
+          });
+        }
 
         if (result?.reportId) {
           navigate(`/report/${result.reportId}`);
@@ -304,8 +369,9 @@ const TestPage = () => {
   };
 
   const handlePause = async () => {
-    if (!user?.id || !testType) return;
+    if (!user?.id || !testType || saving) return;
 
+    setSaving(true);
     try {
       // Save current progress
       const answersObject = answers.reduce<Record<string, any>>((acc, answer) => {
@@ -326,6 +392,13 @@ const TestPage = () => {
       navigate('/profile');
     } catch (error) {
       console.error('Error pausing test:', error);
+      toast({
+        title: 'Error saving progress',
+        description: 'Failed to save your progress. Please try again.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -487,13 +560,6 @@ const TestPage = () => {
                       </Badge>
 
                       <div className="flex items-center gap-2">
-                        {saving && (
-                          <Badge variant="outline" className="text-xs flex items-center gap-1">
-                            <div className="w-2 h-2 bg-primary rounded-full animate-pulse" />
-                            Saving...
-                          </Badge>
-                        )}
-
                         {q?.required ? (
                           <Badge variant="destructive" className="text-xs">
                             {uiMicrocopy.tests.requiredLabel}

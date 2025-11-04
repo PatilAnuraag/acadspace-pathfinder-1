@@ -3,6 +3,7 @@ package com.naviksha.controller;
 import com.naviksha.dto.TestSubmissionDTO;
 import com.naviksha.model.*;
 import com.naviksha.service.*;
+import com.naviksha.service.EmailService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -49,6 +50,7 @@ public class TestController {
     private final ScoringService scoringService;
     private final ReportService reportService;
     private final UserService userService;
+    private final EmailService emailService;
 
     @GetMapping("/tests")
     @Operation(summary = "Get available tests", description = "List all available career assessment tests")
@@ -99,10 +101,17 @@ public class TestController {
             submission.setUserId(user.getId());
             submission.setUserName(user.getName());
             
-            // Validate test exists
-            Test test = testService.getTestById(testId);
-            if (test == null) {
-                return ResponseEntity.badRequest().body("Test not found");
+            // Handle combined test submission (both vibematch and edustats)
+            if ("combined".equals(testId)) {
+                // For combined submission, we don't need to validate a specific test
+                // The scoring service will process both test results
+                log.info("Processing combined test submission for user: {}", userEmail);
+            } else {
+                // Validate individual test exists
+                Test test = testService.getTestById(testId);
+                if (test == null) {
+                    return ResponseEntity.badRequest().body("Test not found");
+                }
             }
             
             // Compute career report using scoring service
@@ -111,8 +120,17 @@ public class TestController {
             // Save report to database
             Report savedReport = reportService.saveReport(report, user.getId());
             
-            // Clear user's progress for this test
-            progressService.resetProgress(user.getId(), testId);
+            // Send email with PDF report
+            try {
+                emailService.sendReportEmail(report, user.getEmail(), user.getName());
+                log.info("Email sent successfully to: {} for student: {}", user.getEmail(), user.getName());
+            } catch (Exception e) {
+                log.error("Failed to send email to: {} for student: {}", user.getEmail(), user.getName(), e);
+                // Don't fail the entire request if email fails
+            }
+            
+            // Note: Progress is kept for user retake capability and completion tracking
+            // Progress is only cleared when user explicitly starts a new test
             
             log.info("Test submitted successfully. Report ID: {}", savedReport.getId());
             
@@ -218,6 +236,32 @@ public class TestController {
             log.error("Error resetting progress", e);
             return ResponseEntity.internalServerError()
                 .body("Error resetting progress: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/progress/cleanup")
+    @Operation(summary = "Cleanup duplicate progress", 
+               description = "Remove duplicate progress entries for user, keeping only the most recent",
+               security = @SecurityRequirement(name = "bearerAuth"))
+    public ResponseEntity<?> cleanupDuplicateProgress(Authentication authentication) {
+        try {
+            String userEmail = authentication.getName();
+            User user = userService.findByEmail(userEmail);
+            
+            if (user == null) {
+                return ResponseEntity.badRequest().body("User not found");
+            }
+            
+            progressService.cleanupDuplicateProgress(user.getId());
+            
+            return ResponseEntity.ok(Map.of(
+                "message", "Duplicate progress entries cleaned up successfully"
+            ));
+            
+        } catch (Exception e) {
+            log.error("Error cleaning up duplicate progress", e);
+            return ResponseEntity.internalServerError()
+                .body("Error cleaning up duplicate progress: " + e.getMessage());
         }
     }
 }
