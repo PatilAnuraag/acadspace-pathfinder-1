@@ -50,8 +50,8 @@ services:
   # Naviksha Backend API
   naviksha-backend:
     build: 
-      context: ./backend
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: backend/Dockerfile
     container_name: naviksha-backend
     restart: unless-stopped
     environment:
@@ -89,8 +89,8 @@ services:
   # AI Report Generation Service
   ai-report-service:
     build:
-      context: ./ai-report-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: ai-report-service/Dockerfile
     container_name: ai-report-service
     restart: unless-stopped
     environment:
@@ -115,8 +115,8 @@ services:
   # PDF Generation Service (Node.js - uses same jsPDF logic as frontend)
   pdf-service:
     build:
-      context: ./pdf-service
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: pdf-service/Dockerfile
     container_name: pdf-service
     restart: unless-stopped
     environment:
