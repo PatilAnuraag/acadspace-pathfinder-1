@@ -17,4 +17,10 @@ public class RegisterRequest {
     
     @NotBlank(message = "Name is required")
     private String name;
+    
+    // Optional profile fields
+    private String fullName;
+    private String schoolName;
+    private Integer grade;
+    private String board;
 }

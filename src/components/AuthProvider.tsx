@@ -12,7 +12,15 @@ interface AuthContextType {
   user: User | null;
   loading: boolean;
   signIn: (email: string, password: string) => Promise<void>;
-  signUp: (email: string, password: string, name: string) => Promise<void>;
+  signUp: (
+    email: string, 
+    password: string, 
+    name: string, 
+    fullName?: string,
+    schoolName?: string, 
+    grade?: number, 
+    board?: string
+  ) => Promise<void>;
   signOut: () => Promise<void>;
   updateProfile: (updates: Partial<User>) => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -65,9 +73,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
   };
 
-  const signUp = async (email: string, password: string, name: string) => {
+  const signUp = async (
+    email: string, 
+    password: string, 
+    name: string, 
+    fullName?: string,
+    schoolName?: string, 
+    grade?: number, 
+    board?: string
+  ) => {
     try {
-      const response = await apiService.register(email, password, name);
+      const response = await apiService.register(
+        email, 
+        password, 
+        name, 
+        fullName,
+        schoolName, 
+        grade, 
+        board
+      );
       setUser(response.user);
       toast.success('Account created successfully');
     } catch (error: any) {

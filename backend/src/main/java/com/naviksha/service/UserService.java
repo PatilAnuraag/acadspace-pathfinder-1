@@ -19,6 +19,10 @@ public class UserService {
             .email(request.getEmail())
             .password(passwordEncoder.encode(request.getPassword()))
             .name(request.getName())
+            .fullName(request.getFullName())
+            .schoolName(request.getSchoolName())
+            .grade(request.getGrade())
+            .board(request.getBoard())
             .build();
         
         return userRepository.save(user);

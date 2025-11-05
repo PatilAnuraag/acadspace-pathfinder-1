@@ -87,6 +87,7 @@ public class SecurityConfig {
             // Default: Allow common origins for development and production
             configuration.addAllowedOrigin("http://localhost:5173");
             configuration.addAllowedOrigin("http://localhost:3000");
+            configuration.addAllowedOrigin("http://localhost:8080");
             configuration.addAllowedOrigin("https://naviksha-frontend.onrender.com");
             configuration.addAllowedOrigin("https://acadspace-pathfinder.onrender.com");
         }

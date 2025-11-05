@@ -100,11 +100,27 @@ class ApiService {
 
 
   // Authentication
-  async register(email: string, password: string, name: string): Promise<AuthResponse> {
+  async register(
+    email: string, 
+    password: string, 
+    name: string, 
+    fullName?: string,
+    schoolName?: string, 
+    grade?: number, 
+    board?: string
+  ): Promise<AuthResponse> {
     const response = await fetch(`${API_BASE_URL}/auth/register`, {
       method: 'POST',
       headers: this.getHeaders(),
-      body: JSON.stringify({ email, password, name }),
+      body: JSON.stringify({ 
+        email, 
+        password, 
+        name,
+        fullName,
+        schoolName,
+        grade,
+        board
+      }),
     });
 
     const data = await this.handleResponse<AuthResponse>(response);

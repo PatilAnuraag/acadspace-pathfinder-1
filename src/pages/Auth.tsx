@@ -61,7 +61,16 @@ const Auth = () => {
 
     setLoading(true);
     try {
-      await signUp(formData.email, formData.password, formData.fullName);
+      const gradeNumber = formData.grade ? parseInt(formData.grade, 10) : undefined;
+      await signUp(
+        formData.email, 
+        formData.password, 
+        formData.fullName, 
+        formData.fullName,
+        formData.schoolName, 
+        gradeNumber, 
+        formData.board
+      );
       navigate('/');
     } catch (error: any) {
       // Error handling is done in AuthProvider
