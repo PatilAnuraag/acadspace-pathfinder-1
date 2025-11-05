@@ -3,7 +3,6 @@ package com.naviksha.service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.naviksha.config.AIServiceConfig;
 import com.naviksha.model.StudentReport;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -21,13 +20,20 @@ import java.util.List;
  * Handles communication with the AI report generation microservice
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class AIServiceClient {
     
     private final AIServiceConfig aiServiceConfig;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    
+    public AIServiceClient(AIServiceConfig aiServiceConfig,
+                          @org.springframework.beans.factory.annotation.Qualifier("aiRestTemplate") RestTemplate restTemplate,
+                          ObjectMapper objectMapper) {
+        this.aiServiceConfig = aiServiceConfig;
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+    }
     
     /**
      * Call AI service to enhance the student report

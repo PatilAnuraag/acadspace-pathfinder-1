@@ -1,10 +1,9 @@
 package com.naviksha.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.naviksha.config.PDFServiceConfig;
 import com.naviksha.model.StudentReport;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -22,21 +21,20 @@ import java.util.Map;
  * Uses the same jsPDF logic as the frontend
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class PDFServiceClient {
     
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final PDFServiceConfig pdfServiceConfig;
     
-    @Value("${pdf.service.url:http://pdf-service:5100}")
-    private String pdfServiceUrl;
-    
-    @Value("${pdf.service.enabled:true}")
-    private boolean pdfServiceEnabled;
-    
-    @Value("${pdf.service.timeout:60000}")
-    private int timeout;
+    public PDFServiceClient(@org.springframework.beans.factory.annotation.Qualifier("pdfRestTemplate") RestTemplate restTemplate,
+                           ObjectMapper objectMapper,
+                           PDFServiceConfig pdfServiceConfig) {
+        this.restTemplate = restTemplate;
+        this.objectMapper = objectMapper;
+        this.pdfServiceConfig = pdfServiceConfig;
+    }
     
     /**
      * Generate PDF from StudentReport using the Node.js PDF service
@@ -46,13 +44,14 @@ public class PDFServiceClient {
      * @return PDF bytes
      */
     public byte[] generatePDF(StudentReport studentReport) {
-        if (!pdfServiceEnabled) {
+        if (!pdfServiceConfig.isEnabled()) {
             log.warn("PDF service is disabled, cannot generate PDF");
             throw new RuntimeException("PDF service is disabled");
         }
         
         try {
-            log.info("Calling PDF service to generate PDF for student: {}", studentReport.getStudentName());
+            log.info("Calling PDF service to generate PDF for student: {} (timeout: {}ms)", 
+                studentReport.getStudentName(), pdfServiceConfig.getTimeout());
             
             // Convert StudentReport to JSON format expected by PDF service
             Map<String, Object> reportData = convertStudentReportToMap(studentReport);
@@ -64,9 +63,9 @@ public class PDFServiceClient {
             // Create request entity
             HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(reportData, headers);
             
-            // Call PDF service
+            // Call PDF service using configured URL
             ResponseEntity<byte[]> response = restTemplate.exchange(
-                pdfServiceUrl + "/generate-pdf",
+                pdfServiceConfig.getGeneratePdfUrl(),
                 HttpMethod.POST,
                 requestEntity,
                 byte[].class
@@ -104,13 +103,13 @@ public class PDFServiceClient {
      * @return true if PDF service is available, false otherwise
      */
     public boolean isHealthy() {
-        if (!pdfServiceEnabled) {
+        if (!pdfServiceConfig.isEnabled()) {
             return false;
         }
         
         try {
             ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                pdfServiceUrl + "/health",
+                pdfServiceConfig.getHealthCheckUrl(),
                 HttpMethod.GET,
                 null,
                 new ParameterizedTypeReference<Map<String, Object>>() {}
