@@ -19,7 +19,7 @@ services:
     branch: main
     env: docker
     dockerfilePath: backend/Dockerfile
-    plan: starter
+    plan: free
     region: oregon
     envVars:
       # Server Configuration
@@ -79,7 +79,7 @@ services:
     branch: main
     env: docker
     dockerfilePath: ai-report-service/Dockerfile
-    plan: starter
+    plan: free
     region: oregon
     envVars:
       # Server Configuration
@@ -107,7 +107,7 @@ services:
     branch: main
     env: docker
     dockerfilePath: pdf-service/Dockerfile
-    plan: starter
+    plan: free
     region: oregon
     envVars:
       - key: PORT
