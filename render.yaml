@@ -19,12 +19,8 @@ services:
     branch: main
     env: docker
     dockerfilePath: backend/Dockerfile
-    path: backend
     plan: starter
     region: oregon
-    buildCommand: ""
-    startCommand: ""
-    port: 4000
     envVars:
       # Server Configuration
       - key: SPRING_PROFILES_ACTIVE
@@ -83,10 +79,8 @@ services:
     branch: main
     env: docker
     dockerfilePath: ai-report-service/Dockerfile
-    path: ai-report-service
     plan: starter
     region: oregon
-    port: 8000
     envVars:
       # Server Configuration
       - key: PORT
@@ -113,10 +107,8 @@ services:
     branch: main
     env: docker
     dockerfilePath: pdf-service/Dockerfile
-    path: pdf-service
     plan: starter
     region: oregon
-    port: 5100
     envVars:
       - key: PORT
         value: "5100"
@@ -127,7 +119,6 @@ services:
     repo: https://github.com/vikrantshome/acadspace-pathfinder
     branch: main
     env: static
-    path: .
     buildCommand: npm install && npm run build
     staticPublishPath: dist
     envVars:
