@@ -279,7 +279,7 @@ export function generateReportPDF(reportData: ReportData): jsPDF {
   const isGradeBelow8 = grade < 8;
   
   // Card dimensions with increased padding
-  const cardPadding = 20; // Increased padding from card border
+  const cardPadding = 10; // Increased padding from card border
   const cardX = 15;
   const cardWidth = pageWidth - 30;
   const textX = cardX + cardPadding;
@@ -954,10 +954,10 @@ export function generateReportPDF(reportData: ReportData): jsPDF {
           details[currentKey] = currentValue.trim();
         }
         
-        // Card dimensions with increased padding (same as detailed career explanations)
-        const cardPadding = 10; // Increased padding from card border
-        const cardX = 20;
-        const cardWidth = pageWidth - 40;
+        // Card dimensions with minimal padding
+        const cardPadding = 8; // Reduced padding
+        const cardX = 15;
+        const cardWidth = pageWidth - 30;
         const textX = cardX + cardPadding;
         const textWidth = cardWidth - (cardPadding * 2);
         
