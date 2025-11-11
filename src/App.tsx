@@ -12,6 +12,7 @@ import Results from "./pages/Results";
 import ReportViewer from "./pages/ReportViewer";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
+import ExportQuestions from "./pages/ExportQuestions";
 
 const queryClient = new QueryClient();
 
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/report/:reportId" element={<ReportViewer />} />
             <Route path="/report" element={<ReportViewer />} />
             <Route path="/profile" element={<Profile />} />
+            <Route path="/export-questions" element={<ExportQuestions />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
