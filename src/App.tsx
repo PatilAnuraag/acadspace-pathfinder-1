@@ -14,7 +14,6 @@ import ReportViewer from "./pages/ReportViewer";
 import Profile from "./pages/Profile";
 import NotFound from "./pages/NotFound";
 import ExportQuestions from "./pages/ExportQuestions";
-import NcciallenPage from "./pages/NcciallenPage";
 
 const queryClient = new QueryClient();
 
@@ -37,7 +36,6 @@ const App = () => {
               <Route path="/report" element={<ReportViewer />} />
               <Route path="/profile" element={<Profile />} />
               <Route path="/export-questions" element={<ExportQuestions />} />
-              <Route path="/ncciallen" element={<NcciallenPage />} />
               {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
               <Route path="*" element={<NotFound />} />
             </Routes>
