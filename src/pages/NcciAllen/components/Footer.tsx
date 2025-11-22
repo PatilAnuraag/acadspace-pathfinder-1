@@ -23,7 +23,7 @@ const Footer = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-8 mb-6 opacity-40 grayscale">
-          <div className="text-xl font-bold text-foreground">ALLEN</div>
+          {/* <div className="text-xl font-bold text-foreground">ALLEN</div> */}
           <div className="text-xl font-bold text-foreground">ALLEN Online</div>
           <div className="text-xl font-bold text-foreground">Naviksha</div>
         </div>

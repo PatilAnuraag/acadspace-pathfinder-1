@@ -35,6 +35,7 @@ const LegacySection = () => {
         </div>
 
         <div className="flex flex-wrap items-center justify-center gap-8 opacity-40 grayscale">
+          <div className="text-2xl font-bold text-foreground">ALLEN</div>
           <div className="text-2xl font-bold text-foreground">ALLEN Online</div>
           <div className="text-2xl font-bold text-foreground">Naviksha</div>
         </div>
