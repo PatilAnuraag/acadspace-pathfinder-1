@@ -92,8 +92,7 @@ const SignUp: React.FC = () => {
         </div>
 
         <Card className="glass border-0 shadow-2xl">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-lg md:text-xl text-center">Sign Up</CardTitle>
+          <CardHeader className="space-y-1">
 
             <div className="flex justify-center mt-3">
               <div className="inline-flex bg-white/5 rounded-full p-1 gap-1">
