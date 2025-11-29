@@ -191,7 +191,7 @@ async function generatePdfPage(browser, templateName, reportData, recommendation
         page = await browser.newPage();
 
         // 4. Set content and generate PDF
-        await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+        await page.setContent(htmlContent, { waitUntil: 'networkidle0', timeout: 90000 });
         const pdfBuffer = await page.pdf({
             format: 'A4',
             printBackground: true,
